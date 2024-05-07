@@ -54,16 +54,97 @@
 
 # Functional requirements
 
+## Declaration/registration of Signals
+
+**It shall be possible to declare the set of signals, which are expected to be provided by a data broker instance. This includes the name (path), the metadata, and the value if the signal is an attribute.**
+* Describes those signals "known" on a system
+* This does not mean that these signals actually have an active provider.
+
+Options:
+1. The set of declared signals is defined at startup of the broker, e.g. via a config file (vss.json) passed to the data broker executable.
+   Pros:
+    * All supported signals known during overall broker runtime
+    * Consumers can access metadata once after data broker service gets available
+    * Attribute values can be queried by consumers via a simple get immediately after connecting to the broker service
+    * No subscription of metadata updates needed
+   Cons:
+    * Dynamic adding of new providers adding new signals will require a restart of the broker causing a short "outage" of its availability
+	
+2. Use a registration/de-registration function where providers must register their provided signal (incl. metadata)
+   Presumptions:
+    * Access rights/system management prevents multiple (or the wrong) providers registering a certain signal
+   Pros:
+    * Better "dynamic" adding/removing ability of signals
+	* No data broker outage during dynamic updates
+   Cons:
+    * Requires subscription function for changed metadata?
+	  -> Alternative: Use changed signal failure status of signal subscription to detect states changing from unknown -> "avail" and vice versa and request metadata.
+	     But: What if metadata of already existing signals changes? (Shall we allow that, at all?)
+	* What about "signal compatibility": Are scalar number type signals compatible, if just data types and units are different (as long as the units represents same physical quantity)? Can we assume that clients/SDKs are able to convert these differences automatically? 
+	  In theory, yes. But:
+	   * Which physical units take into regard? Who does know each and every "exotic" physical unit?
+	   * What if the consumer expects a certain granularity of a value (requiring a 32 bit integer at least) but the provider is just giving 8 bit integers?
+	
+3. Combination of both:
+   - Existing signals are configured via config file at broker startup
+   - New/changed/removed signals are managed during runtime via register function?
+   Pros:
+    * Metadata for existing signals is available immediately after startup
+    * No outage
+   Cons:
+    * Config file (vss.json) needs being updated in parallel to be up-to-date for next broker restart
+
+4. Option 1 + adding a maintenance function called "reloadConfig" or "updateConfig" which is called by a central system management component:
+   * This reloads the signal config (vss.json) - which got updated before
+   * Could also have a parameter passing a URL or path to the config.
+   * Alternatively: We could pass "delta files" containing just the added, updated, and removed signals.
+     But the "initial" config file needs anyway being updated to be prepared for the next broker restart.
+   Pros:
+    * Clear interface and time to update signals
+   Cons:
+    * A short "downtime" might be recognizeable as this cannot handle other requests in parallel, at least not those related to the updated signals
+    * Requires a subscribe to metadata changes function
+
+Recommended option (for now): 1
+Reason:
+* Least effort
+* Dynamic maintenance of declared signals is possible (with the drawback of short availability outage)
+* We don't know if the dynamic update is relevant at the moment
+
+## Getting current values
+
+REQ:
+* A VSS consumer shall be able to "pull" the current values of a desired set of signals via a get call.
+* The consumer has to specify the set of desired signals via the names (paths) of the signals.
+* The data broker has to repond for each requested signal with its current value or a failure reason.
+* The data broker must not provide the value of signals, where the consumer has no read access to. Instead, the failure reason "Access denied" or "Unknown signal" must be returned.
+
+## Setting/updating current values
+
+REQ:
+* It must be possible to set/update the current value of sensor and actuator signals.
+* The current value of each signal must be set/updated by a single client only. This client is the provider of that signal. Any other client must be prevented to set/update the current value.
+* Clients shall receive a feedback for each set/updated signal, whether the update was successful or get a definite failure if not.
+* Multiple signals shall be set-/update-able in a single request.
+* It must be possible to update signals frequently in an efficient way.
+* It should be possible to set signals in a simple way ("simple" by means of a provider developer)
+
+## Setting target values
+
+
+
+
+
 ### As Signal Consumer
-1. As a client I want to have a single service point accessible from my execution environment.
+1. As a consumer I want to have a single service point accessible from my execution environment.
    
-2. As a client I want to `Get` sensor values or actuator current values of the vehicle and its environment in a uniform manner.
+2. As a consumer I want to `Get` sensor values or actuator current values of the vehicle and its environment in a uniform manner.
   - Details:
     * All sensor and actuator values for which a client has permission to.
     * Client must provide the paths of the requested signals, which optionally may contain wildcards.
     * I want to receive exactly all the signals’ values I requested without errors.
   
-3. As a client I want to `Subscribe` to sensor values or actuator current values when some signal value changed -> what about continuous subscription?
+3. As a consumer I want to `Subscribe` to update notifications when some signal's current value is changed
   - Details:
     * All sensor and actuator values for which a client has permission to.
     * Client must provide the path, paths or wildcard paths.
@@ -88,7 +169,7 @@
 
 12.  As a client I don’t want to `Subscribe` to attributes values.
 
-13.  As a client I don’t want to `Get` target values.
+13.  As a client I shall not be able don’t want to `Get` target values.
 
 14.  As a client I don’t want to `Set` sensor values.
 
