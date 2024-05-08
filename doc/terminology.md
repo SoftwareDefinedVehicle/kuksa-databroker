@@ -10,6 +10,7 @@ This pages gives an overview about the terms we use, when talking about KUKSA co
    * [Clients: VSS Providers](#clients-vss-providers)
       * [data-provider](#data-provider)
       * [actuation-provider](#actuation-provider)
+   * 
 * [Vehicle Signal Specification (VSS)](#vehicle-signal-specification-vss)
    * [Signal](#signal)
       * [Sensor](#sensor)
@@ -58,6 +59,14 @@ VSS Providers can also be seen as southbound clients of the VSS server. A VSS pr
 Therefore, a VSS provider will always connect two interfaces: Northbound it uses the KUKSA.val API to interact with a VSS server, southbound it will interact with some other system, typically an in-vehicle bus or API.
 
 There are two classes of VSS providers: data-providers and actuation-providers. In practice, a single component might combine both roles.
+
+## Clients: Combined VSS Consumers and Providers
+A client can also be a combination of both, a VSS Provider and a VSS Consumer. For example, a client could combine the information coming from a set of signals to provide a "higher value" signal.
+
+The idea of separating VSS Consumers and VSS Providers is more of a conceptual nature: These are roles a client can have in relation to a *certain* signal. Each client can either be a consumer or the provider of a certain signal. I can have another role regarding another signal.
+
+## Clients: Northbound vs. Southbound
+Similarly to the consumer/provider role definitions, it is not a hard definition but just a conceptual base pattern, that VSS Consumer are northbound (i.e. HMI or cloud facing) and VSS Providers are southbound (i.e. vehicle hardware facing). Of course, it shall be possible, that cloud service can provide ("higher value") signals into the vehicle. And, of course, those signals shall be useable by southbound located components.
 
 ### data-provider
 A data-provider intends to make sure that the actual state of a vehicle is currently represented in the VSS model of the server. A data-provider will update the current value of a VSS signal (sensor, actuator or attribute) in the server. A data-provider for the VSS sensor `Vehicle.Speed` will update that VSS signal in the server based on the actual speed of the vehicle. A data-provider for the VSS actuator `Vehicle.Body.Trunk.Rear.IsOpen` would update that VSS signal in the server based on the _currently_ observed state of the vehicle's trunk.
