@@ -599,6 +599,7 @@ dependencies = [
  "cucumber",
  "databroker-proto",
  "futures",
+ "iai",
  "jemallocator",
  "jsonwebtoken",
  "kuksa",
@@ -651,6 +652,18 @@ dependencies = [
  "http",
  "kuksa-grpc",
  "thiserror",
+ "tokio",
+ "tokio-stream",
+ "tonic",
+]
+
+[[package]]
+name = "databroker-perf"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "databroker-proto",
+ "hdrhistogram",
  "tokio",
  "tokio-stream",
  "tonic",
@@ -1525,6 +1538,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "290f1a1d9242c78d09ce40a5e87e7554ee637af1351968159f4952f028f75604"
 
 [[package]]
+name = "hdrhistogram"
+version = "7.5.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "765c9198f173dd59ce26ff9f95ef0aafd0a0fe01fb9d72841bc5066a4c06511d"
+dependencies = [
+ "byteorder",
+ "num-traits",
+]
+
+[[package]]
 name = "heck"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1625,6 +1648,14 @@ dependencies = [
  "pin-project-lite",
  "tokio",
  "tokio-io-timeout",
+]
+
+[[package]]
+name = "iai"
+version = "0.1.1"
+source = "git+https://github.com/sigaloid/iai?rev=6c83e942#6c83e9429b86290f88d6ff30ca6c0d6014b5a5f3"
+dependencies = [
+ "cfg-if",
 ]
 
 [[package]]

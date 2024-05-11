@@ -19,6 +19,7 @@ members = [
     "databroker",
     "databroker-cli",
     "databroker-grpc",
+    "databroker-perf",
     "databroker-proto",
     "kuksa",
     "kuksa-grpc",

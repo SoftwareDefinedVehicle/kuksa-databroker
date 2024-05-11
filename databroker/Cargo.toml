@@ -89,6 +89,11 @@ vergen = { version = "8", features = [
 anyhow = "1.0"
 chrono = "^0.4"
 cucumber = { version = "0.20", default-features = false, features = ["libtest", "macros"] }
+iai = { git = "https://github.com/sigaloid/iai", rev = "6c83e942" }
+
+[[bench]]
+name = "bench1"
+harness = false
 
 [[test]]
 name = "read_write_values"

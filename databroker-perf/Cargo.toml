@@ -6,3 +6,16 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+databroker-proto = { workspace = true }
+hdrhistogram = { version = "7.5.4", default-features = false }
+tokio = { workspace = true, features = ["rt-multi-thread"] }
+tokio-stream = { workspace = true }
+tonic = { workspace = true }
+clap = { workspace = true, features = [
+    "std",
+    "env",
+    "derive",
+    "help",
+    "error-context",
+    "usage",
+] }
