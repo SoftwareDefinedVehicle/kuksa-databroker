@@ -11,9 +11,8 @@
 * SPDX-License-Identifier: Apache-2.0
 ********************************************************************************/
 
-use databroker_proto::sdv::databroker as proto;
-
-use prost_types::Timestamp;
+use databroker_proto::v1 as proto;
+use databroker_proto::Timestamp;
 
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::ReceiverStream;
@@ -25,14 +24,14 @@ use std::time::{Instant, SystemTime};
 const DEFAULT_ITERATIONS: i32 = 1000;
 const DEFAULT_NTH_MESSAGE: i32 = 1;
 
-fn create_payload(value: &str, id: i32) -> proto::v1::StreamDatapointsRequest {
+fn create_payload(value: &str, id: i32) -> proto::StreamDatapointsRequest {
     let ts = Timestamp::from(SystemTime::now());
-    proto::v1::StreamDatapointsRequest {
+    proto::StreamDatapointsRequest {
         datapoints: HashMap::from([(
             id,
-            proto::v1::Datapoint {
+            proto::Datapoint {
                 timestamp: Some(ts),
-                value: Some(proto::v1::datapoint::Value::StringValue(value.to_string())),
+                value: Some(proto::datapoint::Value::StringValue(value.to_string())),
             },
         )]),
     }
@@ -44,7 +43,7 @@ async fn run_streaming_set_test(iterations: i32, n_th_message: i32) {
         .await;
     match connect {
         Ok(channel) => {
-            let mut client = proto::v1::collector_client::CollectorClient::with_interceptor(
+            let mut client = proto::collector_client::CollectorClient::with_interceptor(
                 channel,
                 |mut req: tonic::Request<()>| {
                     req.metadata_mut().append("authorization",
@@ -57,12 +56,12 @@ async fn run_streaming_set_test(iterations: i32, n_th_message: i32) {
             );
 
             let datapoint1_id = match client
-                .register_datapoints(tonic::Request::new(proto::v1::RegisterDatapointsRequest {
-                    list: vec![proto::v1::RegistrationMetadata {
+                .register_datapoints(tonic::Request::new(proto::RegisterDatapointsRequest {
+                    list: vec![proto::RegistrationMetadata {
                         name: "Vehicle.ADAS.ABS.Error".to_owned(),
                         description: "Vehicle.ADAS.ABS.Error".to_owned(),
-                        data_type: proto::v1::DataType::String as i32,
-                        change_type: proto::v1::ChangeType::Continuous as i32,
+                        data_type: proto::DataType::String as i32,
+                        change_type: proto::ChangeType::Continuous as i32,
                     }],
                 }))
                 .await
@@ -92,7 +91,7 @@ async fn run_streaming_set_test(iterations: i32, n_th_message: i32) {
                                         println!(
                                             "Error setting datapoint {}: {:?}",
                                             error.0,
-                                            proto::v1::DatapointError::from_i32(error.1)
+                                            proto::DatapointError::from_i32(error.1)
                                         )
                                     }
                                 }

@@ -645,6 +645,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "databroker-examples"
+version = "0.1.0"
+dependencies = [
+ "databroker-proto",
+ "tokio",
+ "tokio-stream",
+ "tonic",
+]
+
+[[package]]
 name = "databroker-grpc"
 version = "0.4.4"
 dependencies = [

@@ -18,6 +18,7 @@ resolver = "2"
 members = [
     "databroker",
     "databroker-cli",
+    "databroker-examples",
     "databroker-grpc",
     "databroker-perf",
     "databroker-proto",
@@ -51,7 +52,7 @@ tonic-build = { version = "0.8", default-features = false }
 
 [profile.release]
 lto = true                 # Link time optimization (dead code removal etc...)
-opt-level = "s"
+opt-level = "z"
 codegen-units = 1
 incremental = false
 strip = true

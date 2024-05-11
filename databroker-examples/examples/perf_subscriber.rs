@@ -11,7 +11,7 @@
 * SPDX-License-Identifier: Apache-2.0
 ********************************************************************************/
 
-use databroker_proto::sdv::databroker as proto;
+use databroker_proto::v1 as proto;
 
 use std::time::Instant;
 
@@ -22,7 +22,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await
     {
         Ok(channel) => {
-            let mut client = proto::v1::broker_client::BrokerClient::with_interceptor(
+            let mut client = proto::broker_client::BrokerClient::with_interceptor(
                 channel,
                 |mut req: tonic::Request<()>| {
                     req.metadata_mut().append("authorization",
@@ -35,7 +35,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             );
             let mut n: i32 = 0;
 
-            let args = tonic::Request::new(proto::v1::SubscribeRequest {
+            let args = tonic::Request::new(proto::SubscribeRequest {
                 query: String::from("SELECT Vehicle.ADAS.ABS.Error"),
             });
 
@@ -52,12 +52,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                             for (_id, datapoint) in update.fields {
                                 if let Some(value) = datapoint.value {
                                     match value {
-                                        proto::v1::datapoint::Value::FailureValue(reason) => {
+                                        proto::datapoint::Value::FailureValue(reason) => {
                                             if started {
                                                 eprintln!("-> Failure: {reason:?}");
                                             }
                                         }
-                                        proto::v1::datapoint::Value::StringValue(string_value) => {
+                                        proto::datapoint::Value::StringValue(string_value) => {
                                             match string_value.as_str() {
                                                 "start" => {
                                                     eprintln!("START");
