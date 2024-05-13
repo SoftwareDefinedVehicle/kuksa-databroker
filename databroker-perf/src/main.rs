@@ -16,6 +16,10 @@ struct Config {
     iterations: u64,
     #[clap(long, display_order = 2, default_value_t = 32)]
     sample_size: u64,
+    #[clap(long, display_order = 3, default_value = "http://127.0.0.1")]
+    databroker_host: String,
+    #[clap(long, display_order = 4, default_value_t = 55555)]
+    databroker_port: u64,
 }
 
 #[tokio::main]
@@ -23,13 +27,16 @@ async fn main() {
     let config = Config::parse();
     let iterations = config.iterations;
     let sample_size = config.sample_size;
+    let databroker_address: &'static str = Box::leak(
+        format!("{}:{}", config.databroker_host, config.databroker_port).into_boxed_str(),
+    );
     let (subscriber_tx, mut subscriber_rx) = mpsc::channel(100);
     let (provider_tx, mut provider_rx) = mpsc::channel(100);
     let subscriber_sampler = Sampler::new(iterations, sample_size, subscriber_tx);
     let provider_sampler = Sampler::new(iterations, sample_size, provider_tx);
 
-    let _subscriber = tokio::spawn(async {
-        match subscriber::subscribe(subscriber_sampler).await {
+    let _subscriber = tokio::spawn(async move {
+        match subscriber::subscribe(subscriber_sampler, &databroker_address).await {
             Ok(_) => {}
             Err(err) => {
                 println!("{}", err);
@@ -37,8 +44,8 @@ async fn main() {
         }
     });
 
-    let _provider = tokio::spawn(async {
-        provider::provide(provider_sampler).await;
+    let _provider = tokio::spawn(async move {
+        provider::provide(provider_sampler, &databroker_address).await;
     });
 
     let mut hist = Histogram::<u64>::new_with_bounds(1, 60 * 60 * 1000 * 1000, 3).unwrap();

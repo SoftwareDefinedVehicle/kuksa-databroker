@@ -15,8 +15,11 @@ use crate::sampler;
 use databroker_proto::v1 as proto;
 use tokio::time::Instant;
 
-pub(crate) async fn subscribe(sampler: sampler::Sampler) -> Result<(), Box<dyn std::error::Error>> {
-    match tonic::transport::Channel::from_static("http://127.0.0.1:55555")
+pub(crate) async fn subscribe(
+    sampler: sampler::Sampler,
+    databroker_address: &'static str,
+) -> Result<(), Box<dyn std::error::Error>> {
+    match tonic::transport::Channel::from_static(databroker_address)
         .connect()
         .await
     {

@@ -38,8 +38,8 @@ fn create_payload(value: impl ToString, id: i32) -> proto::StreamDatapointsReque
     }
 }
 
-pub(crate) async fn provide(sampler: sampler::Sampler) {
-    let connect = tonic::transport::Channel::from_static("http://127.0.0.1:55555")
+pub(crate) async fn provide(sampler: sampler::Sampler, databroker_address: &'static str) {
+    let connect = tonic::transport::Channel::from_static(databroker_address)
         .connect()
         .await;
     match connect {
