@@ -136,9 +136,13 @@ REQ:
 
 
 ### As Signal Consumer
-1. As a consumer I want to have a single service point accessible from my execution environment.
+1. As a consumer I want to access all my used signals via a single service (i.e. the data broker) reachable from my execution environment.
+   - I don't want to query multiple signal providers
+   - A consumer and the data broker may run in different execution environments
+
+2. As a consumer I want to know the current state of availability of the data broker service.
    
-2. As a consumer I want to `Get` sensor values or actuator current values of the vehicle and its environment in a uniform manner.
+4. As a consumer I want to `Get` sensor values or actuator current values of the vehicle and its environment in a uniform manner.
   - Details:
     * All sensor and actuator values for which a client has permission to.
     * Client must provide the paths of the requested signals, which optionally may contain wildcards.
@@ -181,17 +185,20 @@ REQ:
 2. Databroker shall support at least those metadata elements as defined by the VSS rule set.
 
 ### As Provider
-1. As a provider I want to `Set` the value and current value of one or many sensors and/or actuators with its timestamp to Databroker.
-2. 
-3. A provider shall be able to continuously and efficiently (e.g. via grpc stream) _**update**_ the current value of one or multiple sensors and/or actuators with its timestamp.
+1. As a provider I want to `Set` the value and current value of one or many attributes, sensors, and/or actuators with its timestamp to Databroker in an "easy to implement" way.
 
-4. A provider shall be able to `Subscribe` to the databroker to receive actuation requests.
-
-5. As a provider I want to `Set` once attributes values.
-
-6. As a provider I don’t need to but I would like to `Get` sensor values or current values of actuatros?.
+2. As a provider I want to be informed about the current availability state of the data broker service.
+3. As a provider I want to be informed if any of my provided signals is already provided by another provider.
    
-7. As a provider I don’t want to `Set` target values to Databroker.
+4. As a provider to get the metadata of all my provided signals immediately after the service point becomes available
+   - to cross check my offering with the expectation
+   
+* to have a efficient possibility to (frequently) update a signal's current value
+
+4. As a provider I want to be able to frequently and efficiently (e.g. via grpc stream) _**update**_ the current value of one or multiple sensors and/or actuators with its timestamp.
+
+5. As a provider I want to be informed about actuation requests (i.e. setting the target value of an actuator) on my provided actuator signals.
+
 
 # Non-Functional Requirements
 
