@@ -17,12 +17,18 @@ use tokio::time::Instant;
 
 pub(crate) async fn subscribe(
     sampler: sampler::Sampler,
-    databroker_address: &'static str,
+    databroker_address: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    match tonic::transport::Channel::from_static(databroker_address)
-        .connect()
-        .await
-    {
+    let endpoint = match tonic::transport::Channel::from_shared(databroker_address.to_owned()) {
+        Ok(endpoint) => endpoint,
+        Err(_) => {
+            panic!(
+                "Error creating endpoint: {:?}",
+                databroker_address.to_owned()
+            );
+        }
+    };
+    match endpoint.connect().await {
         Ok(channel) => {
             let mut client = proto::broker_client::BrokerClient::new(channel);
 

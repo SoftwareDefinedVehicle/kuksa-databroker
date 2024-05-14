@@ -38,10 +38,17 @@ fn create_payload(value: impl ToString, id: i32) -> proto::StreamDatapointsReque
     }
 }
 
-pub(crate) async fn provide(sampler: sampler::Sampler, databroker_address: &'static str) {
-    let connect = tonic::transport::Channel::from_static(databroker_address)
-        .connect()
-        .await;
+pub(crate) async fn provide(sampler: sampler::Sampler, databroker_address: &str) {
+    let endpoint = match tonic::transport::Channel::from_shared(databroker_address.to_owned()) {
+        Ok(endpoint) => endpoint,
+        Err(_) => {
+            panic!(
+                "Error creating endpoint: {:?}",
+                databroker_address.to_owned()
+            );
+        }
+    };
+    let connect = endpoint.connect().await;
     match connect {
         Ok(channel) => {
             let mut client = proto::collector_client::CollectorClient::new(channel);

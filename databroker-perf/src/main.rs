@@ -27,16 +27,15 @@ async fn main() {
     let config = Config::parse();
     let iterations = config.iterations;
     let sample_size = config.sample_size;
-    let databroker_address: &'static str = Box::leak(
-        format!("{}:{}", config.databroker_host, config.databroker_port).into_boxed_str(),
-    );
+    let databroker_address = format!("{}:{}", config.databroker_host, config.databroker_port);
     let (subscriber_tx, mut subscriber_rx) = mpsc::channel(100);
     let (provider_tx, mut provider_rx) = mpsc::channel(100);
     let subscriber_sampler = Sampler::new(iterations, sample_size, subscriber_tx);
     let provider_sampler = Sampler::new(iterations, sample_size, provider_tx);
 
+    let databroker_address_clone = databroker_address.clone();
     let _subscriber = tokio::spawn(async move {
-        match subscriber::subscribe(subscriber_sampler, &databroker_address).await {
+        match subscriber::subscribe(subscriber_sampler, &databroker_address_clone).await {
             Ok(_) => {}
             Err(err) => {
                 println!("{}", err);
@@ -44,8 +43,9 @@ async fn main() {
         }
     });
 
+    let databroker_address_clone = databroker_address.clone();
     let _provider = tokio::spawn(async move {
-        provider::provide(provider_sampler, &databroker_address).await;
+        provider::provide(provider_sampler, &databroker_address_clone).await;
     });
 
     let mut hist = Histogram::<u64>::new_with_bounds(1, 60 * 60 * 1000 * 1000, 3).unwrap();
