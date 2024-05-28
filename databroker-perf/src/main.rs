@@ -20,6 +20,7 @@ use anyhow::{Context, Result};
 use clap::Parser;
 use databroker_proto::sdv::databroker::v1 as proto;
 use hdrhistogram::Histogram;
+use indicatif::{ProgressBar, ProgressState, ProgressStyle};
 use log::error;
 use tokio::{task::JoinSet, time::Instant};
 
@@ -106,6 +107,12 @@ async fn main() -> Result<()> {
     let mut n = 0;
     let mut skipped = 0;
     let mut interval = tokio::time::interval(Duration::from_millis(1));
+    let progress = ProgressBar::new(iterations);
+    progress.set_style(
+        ProgressStyle::with_template("[{elapsed_precise}] [{wide_bar}] {pos:>7}/{len:7}")
+            .unwrap()
+            .progress_chars("=> "),
+    );
     loop {
         if n >= iterations {
             break;
@@ -124,14 +131,14 @@ async fn main() -> Result<()> {
             )
         }));
 
-        let published = provider.publish(datapoints);
+        let publish_task = provider.publish(datapoints);
 
-        let mut tasks: JoinSet<Result<Instant, subscriber::Error>> = JoinSet::new();
+        let mut subscriber_tasks: JoinSet<Result<Instant, subscriber::Error>> = JoinSet::new();
 
         for signal in &signals {
             // TODO: return an awaitable thingie (wrapping the Receiver<Instant>)
             let mut sub = subscriber.wait_for2(&signal.path)?;
-            tasks.spawn(async move {
+            subscriber_tasks.spawn(async move {
                 Ok(sub
                     .recv()
                     .await
@@ -139,8 +146,8 @@ async fn main() -> Result<()> {
             });
         }
 
-        let published = published.await?;
-        while let Some(received) = tasks.join_next().await {
+        let published = publish_task.await?;
+        while let Some(received) = subscriber_tasks.join_next().await {
             match received {
                 Ok(Ok(received)) => {
                     if n < skip {
@@ -156,7 +163,10 @@ async fn main() -> Result<()> {
         }
 
         n += 1;
+        progress.set_position(n);
     }
+
+    progress.finish();
 
     let end_time = SystemTime::now();
     let total_duration = end_time.duration_since(start_time)?;

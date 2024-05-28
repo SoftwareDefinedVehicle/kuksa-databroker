@@ -25,3 +25,4 @@ serde = { version = "1.0", features = ["derive"] }
 thiserror = "1.0"
 log = "0.4.21"
 stderrlog = "0.6.0"
+indicatif = "0.17.8"
