@@ -143,14 +143,18 @@ impl proto::val_server::Val for broker::DataBroker {
                                 match request {
                                     Some(req) => {
                                         match req.action {
-                                            Some(ProvidedActuation(value)) => {
-
+                                            Some(ProvidedActuation(provided_actuation_request)) => {
+                                                let response = provided_actuation(&broker, &provided_actuation_request).await;
+                                                if let Err(err) = response_stream_sender.send(Ok(response)).await
+                                                {
+                                                    debug!("Failed to send response: {}", err);
+                                                }
                                             },
                                             Some(PublishValuesRequest(publish_values_request)) => {
                                                 let response = publish_values(&broker, &publish_values_request).await;
                                                 if let Err(err) = response_stream_sender.send(Ok(response)).await
                                                 {
-                                                    debug!("Failed to send errors: {}", err);
+                                                    debug!("Failed to send response: {}", err);
                                                 }
                                             },
                                             Some(BatchActuateStreamResponse(value)) => {
@@ -244,4 +248,10 @@ async fn publish_values(
             ),
         },
     }
+}
+
+async fn provided_actuation(
+    broker: &AuthorizedAccess<'_, '_>,
+    request: &databroker_proto::kuksa::val::v2::ProvidedActuation,
+) -> OpenProviderStreamResponse {
 }

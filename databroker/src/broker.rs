@@ -17,6 +17,7 @@ pub use crate::types;
 use crate::query;
 pub use crate::types::{ChangeType, DataType, DataValue, EntryType, ValueFailure};
 
+use tokio::sync::mpsc::Sender;
 use tokio::sync::{broadcast, mpsc, RwLock};
 use tokio_stream::wrappers::ReceiverStream;
 use tokio_stream::Stream;
@@ -100,6 +101,12 @@ pub struct Database {
 }
 
 #[derive(Default)]
+pub struct ActuatorRegistry {
+    path_to_id: HashMap<String, i32>,
+    actuator_senders: HashMap<i32, ActuatorSender>,
+}
+
+#[derive(Default)]
 pub struct Subscriptions {
     query_subscriptions: Vec<QuerySubscription>,
     change_subscriptions: Vec<ChangeSubscription>,
@@ -144,8 +151,14 @@ pub enum SubscriptionError {
 pub struct DataBroker {
     database: Arc<RwLock<Database>>,
     subscriptions: Arc<RwLock<Subscriptions>>,
+    actuators_registry: Arc<RwLock<ActuatorRegistry>>,
     version: String,
     shutdown_trigger: broadcast::Sender<()>,
+}
+
+pub struct ActuatorSender {
+    sender: mpsc::Sender<Vec<EntryUpdate>>,
+    permissions: Permissions,
 }
 
 pub struct QuerySubscription {
@@ -589,6 +602,12 @@ impl Entry {
         // TODO: Apply the other fields as well
 
         changed
+    }
+}
+
+impl ActuatorRegistry {
+    pub fn register_actuator(&mut self, actuator_id: i32, sender: ActuatorSender) {
+        self.actuator_senders.insert(actuator_id, sender);
     }
 }
 
@@ -1461,6 +1480,19 @@ impl<'a, 'b> AuthorizedAccess<'a, 'b> {
         }
     }
 
+    pub async fn provided_actuation(&self, actuator_id: i32, sender: &Sender<Vec<EntryUpdate>>) {
+        let actuator_sender = ActuatorSender {
+            sender: sender.clone(),
+            permissions: self.permissions.clone(),
+        };
+
+        self.broker
+            .actuators_registry
+            .write()
+            .await
+            .register_actuator(actuator_id, actuator_sender);
+    }
+
     pub async fn subscribe(
         &self,
         valid_entries: HashMap<i32, HashSet<Field>>,
@@ -1539,6 +1571,7 @@ impl DataBroker {
         DataBroker {
             database: Default::default(),
             subscriptions: Default::default(),
+            actuators_registry: Default::default(),
             version: version.into(),
             shutdown_trigger,
         }
