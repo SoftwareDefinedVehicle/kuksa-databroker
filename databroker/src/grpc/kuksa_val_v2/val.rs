@@ -19,17 +19,21 @@ use databroker_proto::kuksa::val::v2::open_provider_stream_request::Action::Batc
 use databroker_proto::kuksa::val::v2::open_provider_stream_request::Action::ProvidedActuation;
 use databroker_proto::kuksa::val::v2::open_provider_stream_request::Action::PublishValuesRequest;
 use kuksa::proto::v2::open_provider_stream_response;
+use kuksa::proto::v2::BatchActuateStreamRequest;
 use kuksa::proto::v2::OpenProviderStreamResponse;
 use kuksa::proto::v2::PublishValuesResponse;
+use tokio::sync::mpsc::Sender;
 use tokio::{select, sync::mpsc};
 use tokio_stream::wrappers::ReceiverStream;
 use tokio_stream::Stream;
 use tonic::Code;
 use tonic::Response;
+use tonic::Status;
 use tracing::debug;
 
 use crate::broker;
 use crate::broker::AuthorizedAccess;
+use crate::broker::EntryUpdate;
 use crate::permissions::Permissions;
 
 #[tonic::async_trait]
@@ -131,6 +135,14 @@ impl proto::val_server::Val for broker::DataBroker {
         // Create stream (to be returned)
         let (response_stream_sender, response_stream_receiver) = mpsc::channel(10);
 
+        let (actuator_sender, mut actuator_receiver) = mpsc::channel(10);
+
+        let send = response_stream_sender.clone();
+
+        tokio::spawn(async move {
+            convert_to_proto_stream(send, &mut actuator_receiver).await;
+        });
+
         // Listening on stream
         tokio::spawn(async move {
             let permissions = permissions;
@@ -142,13 +154,14 @@ impl proto::val_server::Val for broker::DataBroker {
                             Ok(request) => {
                                 match request {
                                     Some(req) => {
+                                        let (actuation_ack_sender, actuation_ack_receiver) = mpsc::channel(10);
                                         match req.action {
                                             Some(ProvidedActuation(provided_actuation_request)) => {
-                                                let response = provided_actuation(&broker, &provided_actuation_request).await;
-                                                if let Err(err) = response_stream_sender.send(Ok(response)).await
-                                                {
-                                                    debug!("Failed to send response: {}", err);
-                                                }
+                                                provided_actuation(&broker, &provided_actuation_request, actuator_sender.clone(), actuation_ack_receiver).await;
+                                                // if let Err(err) = response_stream_sender.send(Ok(response)).await
+                                                // {
+                                                //     debug!("Failed to send response: {}", err);
+                                                // }
                                             },
                                             Some(PublishValuesRequest(publish_values_request)) => {
                                                 let response = publish_values(&broker, &publish_values_request).await;
@@ -158,7 +171,7 @@ impl proto::val_server::Val for broker::DataBroker {
                                                 }
                                             },
                                             Some(BatchActuateStreamResponse(value)) => {
-
+                                                actuation_ack_sender.send(true).await;
                                             },
                                             None => {
 
@@ -253,5 +266,44 @@ async fn publish_values(
 async fn provided_actuation(
     broker: &AuthorizedAccess<'_, '_>,
     request: &databroker_proto::kuksa::val::v2::ProvidedActuation,
-) -> OpenProviderStreamResponse {
+    sender: mpsc::Sender<Vec<EntryUpdate>>,
+    receiver: mpsc::Receiver<bool>,
+) {
+    let actuator_identifiers = request
+        .actuator_identifiers
+        .iter()
+        .filter_map(|signal_id| match signal_id.signal {
+            Some(proto::signal_id::Signal::Id(id)) => Some(id),
+            _ => None,
+        })
+        .collect();
+
+    broker
+        .provided_actuation(actuator_identifiers, sender, receiver)
+        .await;
+}
+
+async fn convert_to_proto_stream(
+    response_stream_sender: Sender<Result<OpenProviderStreamResponse, tonic::Status>>,
+    receiver: &mut mpsc::Receiver<Vec<EntryUpdate>>,
+) {
+    for item in receiver.recv().await {
+        let mut actuate_requests = Vec::new();
+        for update in item {
+            actuate_requests.push(proto::ActuateRequest {
+                signal_id: todo!(),
+                value: todo!(),
+            });
+        }
+        let response = OpenProviderStreamResponse {
+            action: Some(
+                open_provider_stream_response::Action::BatchActuateStreamRequest(
+                    BatchActuateStreamRequest {
+                        actuate_requests: actuate_requests,
+                    },
+                ),
+            ),
+        };
+        response_stream_sender.send(Ok(response));
+    }
 }

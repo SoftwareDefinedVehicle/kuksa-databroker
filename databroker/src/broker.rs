@@ -102,8 +102,7 @@ pub struct Database {
 
 #[derive(Default)]
 pub struct ActuatorRegistry {
-    path_to_id: HashMap<String, i32>,
-    actuator_senders: HashMap<i32, ActuatorSender>,
+    actuator_container: Vec<ActuatorSender>,
 }
 
 #[derive(Default)]
@@ -157,7 +156,9 @@ pub struct DataBroker {
 }
 
 pub struct ActuatorSender {
+    actuator_identifiers: HashSet<i32>,
     sender: mpsc::Sender<Vec<EntryUpdate>>,
+    recevier_ack: mpsc::Receiver<bool>,
     permissions: Permissions,
 }
 
@@ -606,8 +607,8 @@ impl Entry {
 }
 
 impl ActuatorRegistry {
-    pub fn register_actuator(&mut self, actuator_id: i32, sender: ActuatorSender) {
-        self.actuator_senders.insert(actuator_id, sender);
+    pub fn register_actuator(&mut self, sender: ActuatorSender) {
+        self.actuator_container.push(sender);
     }
 }
 
@@ -1480,9 +1481,16 @@ impl<'a, 'b> AuthorizedAccess<'a, 'b> {
         }
     }
 
-    pub async fn provided_actuation(&self, actuator_id: i32, sender: &Sender<Vec<EntryUpdate>>) {
+    pub async fn provided_actuation(
+        &self,
+        actuator_identifiers: Vec<i32>,
+        sender: Sender<Vec<EntryUpdate>>,
+        receiver: mpsc::Receiver<bool>,
+    ) {
         let actuator_sender = ActuatorSender {
+            actuator_identifiers: actuator_identifiers.into_iter().collect(),
             sender: sender.clone(),
+            recevier_ack: receiver,
             permissions: self.permissions.clone(),
         };
 
@@ -1490,7 +1498,7 @@ impl<'a, 'b> AuthorizedAccess<'a, 'b> {
             .actuators_registry
             .write()
             .await
-            .register_actuator(actuator_id, actuator_sender);
+            .register_actuator(actuator_sender);
     }
 
     pub async fn subscribe(
