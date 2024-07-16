@@ -177,7 +177,7 @@ where
 
     let kuksa_val_v1 = {
         if apis.contains(&Api::KuksaValV1) {
-            Some(kuksa::val::v1::val_server::ValServer::with_interceptor(
+            Some(kuksa::val::v2::val_server::ValServer::with_interceptor(
                 broker.clone(),
                 authorization.clone(),
             ))
