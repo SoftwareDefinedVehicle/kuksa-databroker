@@ -48,9 +48,6 @@ Execute the test suite
 ```
 # Just run all tests in ./integration_test/viss
 pytest
-
-# Generate reporting data
-pytest --alluredir allure-results
 ```
 
 ### Troubleshooting tests
@@ -104,6 +101,12 @@ sudo apt-get update
 sudo apt-get install default-jre
 wget https://github.com/allure-framework/allure2/releases/download/2.33.0/allure_2.33.0-1_all.deb
 sudo dpkg -i allure_<version>_all.deb
+```
+
+### Run the tests to generate reports
+
+```
+pytest --alluredir allure-results
 ```
 
 ### Test Report User Interface
