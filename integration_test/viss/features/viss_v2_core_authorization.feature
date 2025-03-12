@@ -2,7 +2,7 @@
 # https://w3c.github.io/automotive/spec/VISSv2_Core.html#access-control-model
 #
 
-Feature: VISS v2 Compliance Testing
+Feature: VISS v2 Compliance Testing - Authorization
 
   Background:
     Given the VISS server is running

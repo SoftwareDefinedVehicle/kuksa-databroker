@@ -2,7 +2,7 @@
 # https://w3c.github.io/automotive/spec/VISSv2_Core.html#unsubscribe
 #
 
-Feature: VISS v2 Compliance Testing
+Feature: VISS v2 Compliance Testing - Core: Unsubscribe
 
   Background:
     Given the VISS server is running

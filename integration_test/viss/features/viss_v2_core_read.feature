@@ -2,7 +2,7 @@
 # https://w3c.github.io/automotive/spec/VISSv2_Core.html#read
 #
 
-Feature: VISS v2 Compliance Testing
+Feature: VISS v2 Compliance Testing - Core: Read
 
   Background:
     Given the VISS server is running
@@ -11,8 +11,8 @@ Feature: VISS v2 Compliance Testing
   # 5.1.2 Read request
   # The VISS server must support read requests to retrieve data from a valid path.
   @MustHave
-  Scenario: Read a valid data path
-    When I send a read request with path "Vehicle.Speed"
+  Scenario: Read a valid data path (Vehicle.VIN)
+    When I send a read request with path "Vehicle.VIN"
     Then I should receive a valid read response
 
   # 5.1.2 Read request - Error handling

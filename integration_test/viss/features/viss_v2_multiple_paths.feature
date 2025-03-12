@@ -2,7 +2,7 @@
 # https://w3c.github.io/automotive/spec/VISSv2_Core.html#read
 #
 
-Feature: VISS v2 Compliance Testing
+Feature: VISS v2 Compliance Testing - Multiple Paths
 
   Background:
     Given the VISS server is running

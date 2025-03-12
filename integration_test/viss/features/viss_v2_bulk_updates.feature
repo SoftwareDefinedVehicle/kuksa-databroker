@@ -1,4 +1,4 @@
-Feature: VISS v2 Compliance Testing
+Feature: VISS v2 Compliance Testing - Bulk Updates
 
   Background:
     Given the VISS server is running

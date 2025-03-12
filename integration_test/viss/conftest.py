@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 # Fail early if databroker is not up and running
 @pytest.fixture(autouse=True, scope='session')
-def my_fixture(pytestconfig):
+def check_databroker_connect_http_url(pytestconfig):
     # setup
     url = pytestconfig.getini("viss_http_base_url")
     try:

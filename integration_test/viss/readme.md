@@ -32,7 +32,7 @@ cd integration_test/viss/
 python -m venv .venv
 source .venv/bin/activate
 
-pip install pytest pytest-bdd allure-pytest requests websocket-client paho-mqtt tinydb
+pip install pytest pytest-bdd allure-pytest-bdd requests websocket-client paho-mqtt tinydb
 ```
 
 ## Running the tests

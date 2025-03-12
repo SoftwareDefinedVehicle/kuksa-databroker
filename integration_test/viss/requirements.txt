@@ -3,9 +3,8 @@ grpcio
 protobuf
 pytest
 pytest-ordering
-pytest-asyncio
 pytest-bdd
-allure-pytest
+allure-pytest-bdd
 requests
 websocket-client
 paho-mqtt

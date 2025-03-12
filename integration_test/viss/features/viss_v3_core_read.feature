@@ -1,15 +1,15 @@
 #
-# https://w3c.github.io/automotive/spec/VISSv2_Core.html#read
+# https://raw.githack.com/COVESA/vehicle-information-service-specification/main/spec/VISSv3.0_Core.html
 #
 
-Feature: VISS v2 Compliance Testing - Basic
+Feature: VISS v3 Compliance Testing - Core operations
 
   Background:
     Given the VISS server is running
     Given the VISS client is connected via WebSocket
 
-  # 5.1.2 Read request
-  # The VISS server must support read requests to retrieve data from a valid path.
+  # 5.1.1 Read
+  # Purpose: Get one or more values addressed by the given path.
   @MustHave
   Scenario: Read a valid data path
     When I send a read request with path "Vehicle.Speed"

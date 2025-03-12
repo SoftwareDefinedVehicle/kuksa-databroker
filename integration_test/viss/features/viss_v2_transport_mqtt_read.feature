@@ -5,7 +5,7 @@
 # The basic operations itself are mandatory, such as reading a data point. Those tests are in separate gherkin features files.
 #
 
-Feature: VISS v2 Compliance Testing
+Feature: VISS v2 Compliance Testing - Transport: MQTT
 
   Background:
     Given the VISS server is running
