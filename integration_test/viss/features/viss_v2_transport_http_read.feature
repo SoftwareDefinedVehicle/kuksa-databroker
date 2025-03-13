@@ -2,7 +2,7 @@
 # https://www.w3.org/TR/viss2-transport/#wss-service-discovery-read
 #
 
-Feature: VISS v2 Compliance Testing
+Feature: VISS v2 Compliance Testing - Transport: HTTP
 
   Background:
     Given the VISS server is running

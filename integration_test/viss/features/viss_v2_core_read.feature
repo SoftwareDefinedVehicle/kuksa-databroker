@@ -11,8 +11,8 @@ Feature: VISS v2 Compliance Testing - Core: Read
   # 5.1.2 Read request
   # The VISS server must support read requests to retrieve data from a valid path.
   @MustHave
-  Scenario: Read a valid data path (Vehicle.VIN)
-    When I send a read request with path "Vehicle.VIN"
+  Scenario: Read a valid data path (Vehicle.VehicleIdentification.VIN)
+    When I send a read request with path "Vehicle.VehicleIdentification.VIN"
     Then I should receive a valid read response
 
   # 5.1.2 Read request - Error handling
